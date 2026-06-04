@@ -27,6 +27,7 @@ int run_client(const char* target_ip, const char* filepath) {
 //parametrized the entire function
 
     int status, valread, client_fd;
+
     struct sockaddr_in serv_addr;
 
     //creating client socket
