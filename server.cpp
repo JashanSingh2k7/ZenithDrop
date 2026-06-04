@@ -15,7 +15,6 @@
 #include <queue>
 #include "protocol.h"
 #include <sodium.h>
-
 //to compile
 //g++ -std=c++17 -pthread -o server server.cpp $(pkg-config --cflags --libs libsodium)
 
@@ -32,7 +31,7 @@ private:
   std::condition_variable cv_;
   bool stop_ = false;
 
-  
+
 public:
   //initializing the constructor for the class/there needs to a cue that allocates the tasks to the threads
   //there will be a total of 4 threads total
