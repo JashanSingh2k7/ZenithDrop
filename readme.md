@@ -5,6 +5,7 @@ A low-level, high-throughput file transfer CLI built in C++ using the Berkeley S
 ZenithDrop moves files between machines as fast as possible while maintaining a tiny memory footprint and end-to-end encryption. By bypassing high-level abstractions, this project provides granular control over the TCP byte stream, ensuring data integrity and confidentiality for any file type (Text, Images, Video).
 
 Think AirDrop — but for the Linux terminal.
+
 ### Key Technical Specs:
 * Protocol: Custom Binary Header (268-byte fixed width)
 * Encryption: XChaCha20-Poly1305 (AES-256 equivalent) via libsodium
