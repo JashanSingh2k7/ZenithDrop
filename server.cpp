@@ -15,10 +15,13 @@
 #include <queue>
 #include "protocol.h"
 #include <sodium.h>
+
 //to compile
 //g++ -std=c++17 -pthread -o server server.cpp $(pkg-config --cflags --libs libsodium)
 
-//update this portion of the code
+// the threapool needs to call it
+// so we need to define it right now
+// so there aren't problems
 void handle_client(int client_socket);
 
 //this is the server file
@@ -36,42 +39,67 @@ public:
   //initializing the constructor for the class/there needs to a cue that allocates the tasks to the threads
   //there will be a total of 4 threads total
   ThreadPool(size_t num_threads = std::thread::hardware_concurrency()) {
+    // crea the number of threads that are required
     for (size_t i = 0; i < num_threads; i++) {
-      threads_.emplace_back([this] {
-        while(true) {
-        int client_fd;
-          {
-          int socket;
-          std::unique_lock<std::mutex> lock(this->que_mutex_);
-          this->cv_.wait(lock, [this] {return this->stop_ || !this->tasks_.empty();});
-          if (this->stop_ && this->tasks_.empty()) return;
-          client_fd = this->tasks_.front();
-          this->tasks_.pop();
-          }
+        threads_.emplace_back([this] {
+        
+        // the infinite worker loop 
+        while (true) {
+            int client_fd;
 
-          handle_client(client_fd);
-           
+            // scoped
+            { 
+              // wrapper on the mutex for additional functionaility
+              std::unique_lock<std::mutex> lock(que_mutex_);
+
+              // sleep state without burning the cpu cycles
+              cv_.wait(lock, [this] { 
+                  return stop_ || !tasks_.empty(); 
+              });
+
+              // the thing that destroys the thread
+              if (stop_ && tasks_.empty()) {
+                  return; // Exit the loop and let the thread die cleanly
+              }
+
+              // grabs the task from the queue
+              client_fd = tasks_.front();
+              tasks_.pop();
+                
+            } //goes out of scope
+
+            // calling the predefined handle_client function
+            handle_client(client_fd);
         }
       });
     }
   }
 
 
+  // basically wakes up a thread
+  // when there is a task
   void enqueue(int socket) {
-     {
-    std::unique_lock<std::mutex> lock(que_mutex_);
-    tasks_.push(socket);
+    
+    {
+      std::unique_lock<std::mutex> lock(que_mutex_);
+      tasks_.push(socket);
     }
+
     cv_.notify_one();
   }
   
+  // this is the just the threadpool destructor
   ~ThreadPool() {
     {
       std::unique_lock<std::mutex> lock(que_mutex_);
       stop_ = true;
     }
+
     cv_.notify_all();
-    for (std::thread &worker : threads_) worker.join();
+    
+    for (std::thread &worker : threads_) {
+      worker.join();
+    }
   }
 };
 
