@@ -29,6 +29,21 @@
 // so there aren't problems
 void handle_client(int client_socket);
 
+// This guarantees we don't return until we have exactly 'length' bytes
+bool recv_all(int socket, void* buffer, size_t length) {
+    char* ptr = (char*)buffer;
+    size_t bytes_left = length;
+
+    while (bytes_left > 0) {
+        int bytes_read = recv(socket, ptr, bytes_left, 0);
+        if (bytes_read <= 0) {return false;}
+        
+        ptr += bytes_read;
+        bytes_left -= bytes_read;
+    }
+    return true;
+}
+
 //this is the server file
 //this is the threadpool class
 class ThreadPool {
@@ -115,8 +130,8 @@ void handle_client(int client_socket) {
     //header structure
     ZenithHeader receivedHeader;
 
-    //getting the bytes from the cleints
-    int headerBytesRead = recv(client_socket, &receivedHeader, sizeof(ZenithHeader), 0);
+    //getting the bytes from the clients
+    int headerBytesRead = recv_all(client_socket, &receivedHeader, sizeof(ZenithHeader));
 
     //printing out the values from the client
     if (headerBytesRead == sizeof(ZenithHeader)) {
@@ -173,7 +188,7 @@ void handle_client(int client_socket) {
         printf("received");
 
         //had to type cast due to min specifications
-        int valread = recv(client_socket, cipher_buffer, sizeof(cipher_buffer), 0);
+        int valread = recv_all(client_socket, cipher_buffer, sizeof(cipher_buffer));
 
         //logic for loop exist after all bytes obtained
         if (valread > 0) {
