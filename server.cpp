@@ -16,6 +16,11 @@
 #include "protocol.h"
 #include <sodium.h>
 
+// improvements to make: 
+// 1. The Concurrency Flex (epoll / Asynchronous I/O)
+// 2. The OS Kernel Flex (Memory-Mapped Files with mmap)
+// 3. The Protocol Flex (Resumable Streaming)
+
 //to compile
 //g++ -std=c++17 -pthread -o server server.cpp $(pkg-config --cflags --libs libsodium)
 
@@ -96,7 +101,7 @@ public:
     }
 
     cv_.notify_all();
-    
+
     for (std::thread &worker : threads_) {
       worker.join();
     }
